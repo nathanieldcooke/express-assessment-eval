@@ -7,7 +7,7 @@
 
 
 // Your code here
-const {HairColor} = require('./models')
+const {HairColor, Person} = require('./models')
 
 const cookieParser = require('cookie-parser')
 const csrf = require('csurf')
@@ -17,21 +17,46 @@ const app = express()
 
 // csurf protection
 const csrfProtection = csrf({ cookie: true })
+app.use(cookieParser())
 app.use(express.urlencoded({ extended: false }))
 
 const port = 8081
 
 app.set('view engine', 'pug')
 
-app.get('/new-person', async (req, res) => {
+app.get('/', async (req, res) => {
+  const people = await Person.findAll({
+    include: HairColor
+  })
 
-  console.log('hairColor Model', HairColor)
+  console.log(people)
+
+  res.render('people', {people})
+})
+
+app.get('/new-person', csrfProtection, async (req, res) => {
 
   const hairColors = await HairColor.findAll()
 
-  console.log('fetched hairColor', hairColors)
+  res.render('new-person', { hairColors, csrfToken: req.csrfToken() })
+})
 
-  res.render('new-person', { hairColors })
+app.post('/new-person', csrfProtection, async (req, res, next) => {
+  const { firstName, lastName, age, biography, hairColorId } = req.body
+
+  try {
+    await Person.create({
+      firstName,
+      lastName,
+      age,
+      biography,
+      hairColorId
+    })
+
+    res.redirect('/')
+  } catch (e) {
+    next(e)
+  }
 })
 
 app.listen(port, () => {
