@@ -7,6 +7,8 @@
 
 
 // Your code here
+const {HairColor} = require('./models')
+
 const cookieParser = require('cookie-parser')
 const csrf = require('csurf')
 const express = require('express')
@@ -19,8 +21,17 @@ app.use(express.urlencoded({ extended: false }))
 
 const port = 8081
 
-app.get('/', (req, res) => {
-  res.send('Hello World!')
+app.set('view engine', 'pug')
+
+app.get('/new-person', async (req, res) => {
+
+  console.log('hairColor Model', HairColor)
+
+  const hairColors = await HairColor.findAll()
+
+  console.log('fetched hairColor', hairColors)
+
+  res.render('new-person', { hairColors })
 })
 
 app.listen(port, () => {
